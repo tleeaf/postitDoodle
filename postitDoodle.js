@@ -1,27 +1,56 @@
-let w = 1920;
-let h = 1080 ;
+let w = 800;
+let h = 800;
 let X_MARGIN = w/10;
 let Y_MARGIN = h/10;
-let NUM_POINTS = 1000;
+let NUM_POINTS = 50;
+let MAX_NUM_CURVES = 1;
 let pArr;
 let count = 0;
+let POSTIT_YELLOW;
+let a, b;
+
 function setup() {
+  POSTIT_YELLOW =  color(240,240,0);
   createCanvas(w, h);
-  background(240, 240, 0);
+  background(POSTIT_YELLOW);
   //pArr = randomPoints(NUM_POINTS);
   console.log(Math.log2(NUM_POINTS));
   pArr = pyramidPoints(NUM_POINTS);
   pArr = pArr.sort(sortByY);
-  frameRate(1);
+  frameRate(25);
   //treeScan(pArr);
+  a = {
+    x: w/2,
+    y: h/2,
+   };
+  b =  randomPoint();
+  DrawSquigglies();
 }
 
 function draw(){
-  
-  treeScan(pArr);
+  b = {x: mouseX, y: mouseY};
+  // background(240, 240, 0);
+  // DrawSquigglies();
+  //treeScan(pArr);
   //drawPoint(pArr[count]);
   //drawCurve(pArr[count],pArr[(count+1)%pArr.length]);
   //count++;  
+}
+
+function mouseClicked(){
+
+}
+
+function placePoint(){
+
+}
+
+function DrawSquigglies(){
+  // drawCurve(a,b)
+  drawCurvesBetween(a,b);
+  drawPoint(a);
+  drawPoint(b);
+  // drawPerpdendicularBisector(a,b)
 }
 
 function treeScan(points){
@@ -56,7 +85,7 @@ function linearScan(pArr){
 }
 
 function randomControlPoint(point){
-  let variance = 0.5;
+  let variance = 10;
   let result = 
   {
     x: point.x + point.x*random(variance) * random(-1,1),
@@ -65,14 +94,42 @@ function randomControlPoint(point){
   return result;
 }
 
-function drawCurve(a,b){
+function drawCurvesBetween(a,b){
   noFill();
-  stroke(color(random(255),random(255),random(255)));
-  //stroke(10);
+  //stroke(color(random(255),random(255),random(255)));
+  stroke(0,0,60);
   //strokeWeight(random(0.1,10));
   strokeWeight(5);
-  let ctrlA = randomControlPoint(a);
-  let ctrlB = randomControlPoint(b);
+  let numCurves = 2;
+  let intPoints = [];
+  intPoints.push(a);
+  intPoints.push(b);
+  for(let i = 0; i < numCurves; i++){
+    let interiorPoint = randomPointBetween(intPoints[i], intPoints[intPoints.length - 1]);
+    drawPoint(interiorPoint);
+    console.log(interiorPoint);
+    intPoints.splice(i+1,0,interiorPoint);
+  }  
+  console.log(intPoints);
+  for(let i = 0; i < intPoints.length - 1; i++){
+    drawPoint(intPoints[i])
+    drawCurve(intPoints[i], intPoints[i+1]);
+  }
+}
+
+function randomPointBetween(a,b){
+  return {x: random(a.x,b.x), y: random(a.y,b.y)};
+}
+
+function drawCurve(a,b){
+  noFill();
+  //stroke(color(random(255),random(255),random(255)));
+  stroke(0,0,60);
+  //strokeWeight(random(0.1,10));
+  strokeWeight(5);
+  let popb = pointOnPerpendicularBisector(a,b);
+  let ctrlA = popb;
+  let ctrlB = popb;
   curve(
   ctrlA.x,ctrlA.y,
   a.x,a.y,
@@ -81,11 +138,36 @@ function drawCurve(a,b){
   ); 
 }
 
+function pointOnPerpendicularBisector(a,b){
+  let midPoint = {x: (a.x + b.x)/2, y: (a.y + b.y)/2};
+  let slope = -(a.y - b.y)/(a.x - b.x);
+  let intercept = midPoint.y - midPoint.x * slope;
+  let res_x = midPoint.x + 100;
+  let res_y = res_x * slope + intercept;
+  return {x: res_x, y: res_y  };
+}
+
+function drawPerpdendicularBisector(a,b){
+  let midPoint = {x: (a.x + b.x)/2, y: (a.y + b.y)/2};
+  ellipse(midPoint.x,midPoint.y,10,10)
+  let slope = -(a.y - b.y)/(a.x - b.x);
+  let intercept = midPoint.y - midPoint.x * slope;
+  let res_x = midPoint.x + 50;
+  let res_y = res_x * slope + intercept;
+  strokeWeight(1)
+  stroke(200,0,0)
+  line(midPoint.x,midPoint.y,res_x,res_y)
+}
+
 function drawPoint(point) {
   ellipseMode(CENTER);
   stroke(10);
   fill(10);
-  ellipse(point.x,point.y,10,10);
+  // noFill();
+  // strokeWeight(5);
+  ellipse(point.x,point.y,20,20);
+  fill(POSTIT_YELLOW);
+  ellipse(point.x,point.y,18,18);
 }
 
 function pyramidPoints(number){
@@ -99,7 +181,7 @@ function pyramidPoints(number){
     });
    }
  }
- console.log(result.length);
+//  console.log(result.length);
  return result;
 }
 
