@@ -14,7 +14,6 @@ function setup() {
   createCanvas(w, h);
   background(POSTIT_YELLOW);
   //pArr = randomPoints(NUM_POINTS);
-  console.log(Math.log2(NUM_POINTS));
   pArr = pyramidPoints(NUM_POINTS);
   pArr = pArr.sort(sortByY);
   frameRate(25);
@@ -104,16 +103,15 @@ function drawCurvesBetween(a,b){
   let intPoints = [];
   intPoints.push(a);
   intPoints.push(b);
+  let randDisp = random(50);
   for(let i = 0; i < numCurves; i++){
-    let interiorPoint = randomPointBetween(intPoints[i], intPoints[intPoints.length - 1]);
+    let interiorPoint = pointOnParallelLine(intPoints[i], intPoints[intPoints.length - 1], randDisp * pow(-1,i));
     drawPoint(interiorPoint);
-    console.log(interiorPoint);
     intPoints.splice(i+1,0,interiorPoint);
   }  
-  console.log(intPoints);
   for(let i = 0; i < intPoints.length - 1; i++){
-    drawPoint(intPoints[i])
     drawCurve(intPoints[i], intPoints[i+1]);
+    drawPoint(intPoints[i])
   }
 }
 
@@ -128,21 +126,33 @@ function drawCurve(a,b){
   //strokeWeight(random(0.1,10));
   strokeWeight(5);
   let popb = pointOnPerpendicularBisector(a,b);
-  let ctrlA = popb;
-  let ctrlB = popb;
-  curve(
-  ctrlA.x,ctrlA.y,
+  let popl = pointOnParallelLine(a,b,50);
+  let ctrlA = popl;
+  let ctrlB = popl;
+  bezier(
   a.x,a.y,
-  b.x,b.y,
-  ctrlB.x,ctrlB.y
+  ctrlA.x,ctrlA.y,
+  ctrlB.x,ctrlB.y,
+  b.x,b.y
+  
   ); 
+}
+
+function pointOnParallelLine(a,b,displ){
+  let midPoint = {x: (a.x + b.x)/2, y: (a.y + b.y)/2};
+  let slope = (a.y - b.y)/(a.x - b.x);
+  let intercept = midPoint.y - midPoint.x * slope;
+  let randDisplacement = random(-100,100);
+  let res_x = midPoint.x + displ;
+  let res_y = res_x * slope + intercept + displ;
+  return {x: res_x, y: res_y  };
 }
 
 function pointOnPerpendicularBisector(a,b){
   let midPoint = {x: (a.x + b.x)/2, y: (a.y + b.y)/2};
   let slope = -(a.y - b.y)/(a.x - b.x);
   let intercept = midPoint.y - midPoint.x * slope;
-  let res_x = midPoint.x + 100;
+  let res_x = midPoint.x + 20;
   let res_y = res_x * slope + intercept;
   return {x: res_x, y: res_y  };
 }
